@@ -4,6 +4,8 @@
   msgInicial: .asciiz "\n--------------------Conversor Octal para Decimal--------------------\n\n"
   msg1: .asciiz "Digite um numero em octal: "
   msg2: .asciiz "\nNumero em Decimal: "
+  msgErro: .asciiz "\nErro, por favor digite um numero valido!\n\n"
+  msgPerg: .asciiz "\n\nDeseja converter outro numero ? (0-Nao / 1-Sim): "
   pulaLinha: .asciiz "\n"
 .text
 main:
@@ -15,17 +17,19 @@ main:
   # $t4 - resto
   # $t5 - aux2
 
+  # Mensagem principal
+  li $v0, 4
+  la $a0, msgInicial
+  syscall
+
+loopPrincipal:
+
   li $t0, 0
   li $t1, 0
   li $t2, 1
   li $t3, 0
   li $t4, 0
   li $t5, 0
-
-  # Mensagem principal
-  li $v0, 4
-  la $a0, msgInicial
-  syscall
 
   # Recebendo numero
   # mensagem
@@ -41,30 +45,67 @@ main:
   # aux <- num + 0
   add $t3, $t0, $zero
 
-  enquanto:
-    # resto <- aux % 10
-    rem $t4, $t3, 10
+  # (aux > 1)
+  bgt $t3, 1, se
+  j senao
+  se:
+    blt $t3, 10000, se2
+    j senao
+    se2:
+      enquanto:
+        # resto <- aux % 10
+        rem $t4, $t3, 10
 
-    # aux <- aux / 10
-    div $t3, $t3, 10
+        # aux <- aux / 10
+        div $t3, $t3, 10
 
-    # vDec <- vDec + (resto * base)
-    mul $t5, $t4, $t2
-    add $t1, $t1, $t5
+        # vDec <- vDec + (resto * base)
+        mul $t5, $t4, $t2
+        add $t1, $t1, $t5
 
-    # base <- base * 8
-    mul $t2, $t2, 8
+        # base <- base * 8
+        mul $t2, $t2, 8
 
-    # (aux > 0)
-    bgt $t3, 0, enquanto
-  fimEnquanto:
+        # (aux > 0)
+        bgt $t3, 0, enquanto
+      fimEnquanto:
+      j fimse
+  senao:
+    # Mensagem de erro
+    li $v0, 4
+    la $a0, msgErro
+    syscall
+    j loopPrincipal
+  fimse:
+    # Mensagem do resultado
+    li $v0, 4
+    la $a0, msg2
+    syscall
+    # Resultado
+    li $v0, 1
+    add $a0, $t1, 0
+    syscall
 
-  # Mensagem do resultado
-  li $v0, 4
-  la $a0, msg2
-  syscall
+    repeticaoConversao:
 
-  # Resultado
-  li $v0, 1
-  add $a0, $t1, 0
-  syscall
+    # Mensagem perguntando se quer converter de novo
+    li $v0, 4
+    la $a0, msgPerg
+    syscall
+    # Recebendo valor da escolha
+    li $v0, 5
+    syscall
+    add $t0, $v0, $zero
+
+    beq $t0, 1 se3
+    j senao3
+    se3:
+      j loopPrincipal
+    senao3:
+      beq $t0, 0 se4
+      j senao4
+      se4:
+        j fimse3
+      senao4:
+        j repeticaoConversao
+    fimse3:
