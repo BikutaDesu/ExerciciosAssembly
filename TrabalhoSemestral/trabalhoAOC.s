@@ -2,10 +2,11 @@
 # e converta para decimal.
 .data
   msgInicial: .asciiz "\n--------------------Conversor Octal para Decimal--------------------\n\n"
-  msg1: .asciiz "Digite um numero em octal: "
+  msg1: .asciiz "\nDigite um numero em octal: "
   msg2: .asciiz "\nNumero em Decimal: "
-  msgErro: .asciiz "\nErro, por favor digite um numero valido!\n\n"
+  msgErro: .asciiz "\nErro: por favor digite um numero válido!\n\n"
   msgPerg: .asciiz "\n\nDeseja converter outro numero ? (0-Nao / 1-Sim): "
+  msgNInv: .asciiz "\n\nErro: esse numero nao e octal!\n"
   pulaLinha: .asciiz "\n"
 .text
 main:
@@ -56,6 +57,16 @@ loopPrincipal:
         # resto <- aux % 10
         rem $t4, $t3, 10
 
+        # se (resto > 7)
+        bgt $t4, 7, erro
+        j conversao
+        erro:
+          # Mensagem informando que o numero não é octal
+          li $v0, 4
+          la $a0, msgNInv
+          syscall
+          j loopPrincipal
+        conversao:
         # aux <- aux / 10
         div $t3, $t3, 10
 
